@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html ng-app="CodeCard">
+<head>
+    <title></title>
+    <script src="http://lib.sinaapp.com/js/angular.js/angular-1.1.4/angular.min.js"></script>
+    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript">
+
+        angular.module("CodeCard",[])
+                .directive("point", function($document) {
+                    return function (scope, element, attrs) {
+                        element.bind('mouseenter', function(event) {
+                            var vid = element.attr("vid");
+                            var hid = element.attr("hid");
+                            $("td[vid=" + vid + "],th[vid=" + vid + "]").addClass("cross");
+                            $("td[hid=" + hid + "],th[hid=" + hid + "]").addClass("cross");
+                            element.removeClass("cross");
+                            element.addClass("focusPoint");
+                        });
+                        element.bind('mouseleave', function(event) {
+                            var vid = element.attr("vid");
+                            var hid = element.attr("hid");
+                            $("td[vid=" + vid + "],th[vid=" + vid + "]").removeClass("cross");
+                            $("td[hid=" + hid + "],th[hid=" + hid + "]").removeClass("cross");
+                            element.removeClass("focusPoint");
+                        });
+                    }
+                });
+
+        function CodeCtrl($scope) {
+            $scope.codeKeys = ['A','B','C','D','E','F','G','H','I','J'];
+            $scope.codeVals = [
+                ['A10','B11','C12','D13','E14','F15','G16','H17','I18','J19'],
+                ['A20','B21','C22','D23','E24','F25','G26','H27','I28','J29'],
+                ['A30','B31','C32','D33','E34','F35','G36','H37','I38','J39'],
+                ['A40','B41','C42','D43','E44','F45','G46','H47','I48','J49'],
+                ['A50','B51','C52','D53','E54','F55','G56','H57','I58','J59'],
+                ['A60','B61','C62','D63','E64','F65','G66','H67','I68','J69'],
+                ['A70','B71','C72','D73','E74','F75','G76','H77','I78','J79'],
+                ['A80','B81','C82','D83','E84','F85','G86','H87','I88','J89']
+            ];
+            $scope.codeVal = "";
+            $scope.codes = [];
+            $scope.pickup = function(vid,hid,val) {
+                $scope.codes.push({key:$scope.codeKeys[vid]+hid, val: val});
+                $scope.codeVal += val;
+            }
+            $scope.pickdown = function(key) {
+                $scope.codeVal = "";
+                var oldCodes = $scope.codes;
+                $scope.codes = [];
+                console.log(oldCodes);
+                angular.forEach(oldCodes, function(code) {
+                    if(code.key != key) {
+                        $scope.codes.push(code);
+                        $scope.codeVal += code.val;
+                    }
+                })
+            }
+        }
+
+        function CopyToClipBoard(){
+            var txt = $("#targetCode").val();
+            if(window.clipboardData) {
+                window.clipboardData.clearData();
+                window.clipboardData.setData("Text", txt);
+                alert("复制成功");
+            } else if(navigator.userAgent.indexOf("Opera") != -1) {
+                window.location = txt;
+            } else if (window.netscape) {
+                try {
+                    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+                } catch (e) {
+                    alert("如果您正在使用FireFox！\n请在浏览器地址栏输入'about:config'并回车\n然后将'signed.applets.codebase_principal_support'设置为'true'");
+                }
+                var clip = Components.classes['@mozilla.org/widget/clipboard;1'].createInstance(Components.interfaces.nsIClipboard);
+                if (!clip)
+                    return;
+                var trans = Components.classes['@mozilla.org/widget/transferable;1'].createInstance(Components.interfaces.nsITransferable);
+                if (!trans)
+                    return;
+                trans.addDataFlavor('text/unicode');
+                var str = new Object();
+                var len = new Object();
+                var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+                var copytext = txt;
+                str.data = copytext;
+                trans.setTransferData("text/unicode",str,copytext.length*2);
+                var clipid = Components.interfaces.nsIClipboard;
+                if (!clip)
+                    return false;
+                clip.setData(trans,null,clipid.kGlobalClipboard);
+                alert("复制成功！")
+            }
+        }
+
+        $(function () {
+            $("#targetCode").on("mouseover", function() {
+                this.focus();
+                this.select();
+            })
+        })
+    </script>
+    <style type="text/css">
+        table {
+            position: relative;
+            font-size: 24px;
+            border: 0;
+            color: #fff;
+            text-align: center;
+        }
+        th {
+            width: 40px;
+            background-color: darkgray;
+            color: whitesmoke;
+        }
+        td {
+            cursor: pointer;
+        }
+        td.cross {
+            background-color: lightgray;
+            color: lightgray;
+        }
+        th.cross {
+            background-color: grey;
+            color: darkred;
+        }
+        .focusPoint {
+            background-color: darkgray;
+            color: darkred;
+        }
+        .keys {
+            position: relative;
+            display: inline-block;
+            border: 1px solid darkred;
+            background-color: gainsboro;
+            padding: 5px 10px;
+            margin: 10px 5px 10px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body ng-controller="CodeCtrl">
+<table cellspacing=0 >
+    <tr>
+        <th></th>
+        <th ng-repeat="codekey in codeKeys" vid="{{$index}}">{{codekey}}</th>
+    </tr>
+    <tr ng-repeat="codeVal in codeVals">
+
+        <th ng-init="hid=$index+1" hid="{{hid}}">{{hid}}</th>
+        <td point ng-repeat="val in codeVal" ng-init="vid=$index" vid={{vid}} hid="{{hid}}" ng-click="pickup({{vid}},{{hid}},'{{val}}')">{{val}}</td>
+    </tr>
+</table>
+<span class="keys" ng-repeat="code in codes" ng-click="pickdown(code.key)">{{code.key}}</span>
+<br>
+口令：<input id="targetCode" ng-model="codeVal" type="text" readonly/> <button onclick="CopyToClipBoard()">复制到粘贴板</button>
+</body>
+</html>
